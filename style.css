@@ -1,0 +1,89 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; font-family: "Segoe UI", Arial, sans-serif; }
+
+.barra-sup {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	height: 64px;
+	padding: 0 18px;
+	background: #0033a0;
+	color: #fff;
+	box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.barra-sup .logo img { height: 40px; display: block; }
+.barra-titulo { font-size: 18px; font-weight: 600; letter-spacing: .3px; }
+
+.caja-mapa { position: relative; height: calc(100% - 64px); }
+#el-mapa { position: absolute; inset: 0; }
+
+/* Panel de filtros */
+.filtro-mapa {
+	position: absolute;
+	top: 16px;
+	left: 16px;
+	z-index: 1000;
+	width: 320px;
+	max-height: calc(100% - 32px);
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+	border-radius: 10px;
+	box-shadow: 0 4px 18px rgba(0,0,0,.2);
+	overflow: hidden;
+}
+.panel-head { position: relative; padding: 12px; border-bottom: 1px solid #eee; }
+.form-control {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	font-size: 14px;
+	outline: none;
+}
+.form-control:focus { border-color: #0033a0; }
+
+.sugerencias {
+	list-style: none; margin: 4px 0 0; padding: 0;
+	position: absolute; left: 12px; right: 12px; top: 54px;
+	background: #fff; border: 1px solid #ddd; border-radius: 6px;
+	max-height: 240px; overflow-y: auto; z-index: 5; display: none;
+	box-shadow: 0 6px 14px rgba(0,0,0,.15);
+}
+.sugerencias li { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+.sugerencias li:hover, .sugerencias li.activa { background: #eef2fb; }
+
+.panel-body { padding: 12px; overflow-y: auto; }
+.panel-titulo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.panel-titulo h3 { margin: 0; font-size: 15px; color: #0033a0; }
+.panel-titulo button {
+	font-size: 11px; border: 1px solid #0033a0; color: #0033a0;
+	background: #fff; border-radius: 5px; padding: 3px 7px; cursor: pointer;
+}
+
+.filtros { display: flex; flex-direction: column; gap: 4px; }
+.filtro-item { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; }
+.filtro-item:hover { background: #f4f6fb; }
+.filtro-item label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; flex: 1; }
+.filtro-item .swatch {
+	width: 16px; height: 16px; border-radius: 50%;
+	border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); flex-shrink: 0;
+}
+.filtro-item .conteo { font-size: 11px; color: #888; }
+
+/* Marcadores tipo "pin" circular */
+.pin {
+	width: 22px; height: 22px; border-radius: 50% 50% 50% 0;
+	transform: rotate(-45deg);
+	border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,.4);
+	display: flex; align-items: center; justify-content: center;
+}
+.pin span { transform: rotate(45deg); font-size: 11px; line-height: 1; }
+
+.leaflet-popup-content { font-size: 13px; line-height: 1.5; }
+.leaflet-popup-content .gm-piso { color: #0033a0; font-weight: 600; }
+.leaflet-popup-content a { color: #0033a0; font-weight: 600; }
+
+@media (max-width: 600px) {
+	.filtro-mapa { width: calc(100% - 24px); top: auto; bottom: 12px; left: 12px; max-height: 50%; }
+}
