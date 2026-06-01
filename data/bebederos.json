@@ -1,14 +1,14 @@
 [
-  { "title": "Bebedero - Tinkuy / Biblioteca Central", "lat": -12.069354, "lng": -77.080451, "tipo": "Bebederos", "globo": "Bebedero junto a la Biblioteca Central (Tinkuy)" },
-  { "title": "Bebedero - Pabellón A (Letras)", "lat": -12.068452, "lng": -77.078501, "tipo": "Bebederos", "globo": "Bebedero en el Pabellón A - Facultad de Letras y Ciencias Humanas" },
-  { "title": "Bebedero - Pabellón V (Ingeniería)", "lat": -12.072108, "lng": -77.080754, "tipo": "Bebederos", "globo": "Bebedero en el Pabellón V - Estudios Generales Ciencias" },
-  { "title": "Bebedero - Complejo de Innovación Académica (CIA)", "lat": -12.071439, "lng": -77.078890, "tipo": "Bebederos", "globo": "Bebedero en el Complejo de Innovación Académica" },
-  { "title": "Bebedero - Comedor Central", "lat": -12.067676, "lng": -77.079359, "tipo": "Bebederos", "globo": "Bebedero cerca del Comedor Central" },
-  { "title": "Bebedero - Polideportivo", "lat": -12.066068, "lng": -77.079687, "tipo": "Bebederos", "globo": "Bebedero en la zona de Deportes / Polideportivo" },
-  { "title": "Bebedero - Rosa Náutica / Tótem", "lat": -12.069924, "lng": -77.080955, "tipo": "Bebederos", "globo": "Bebedero junto a la zona del Tótem" },
-  { "title": "Bebedero - Facultad de Arte", "lat": -12.069166, "lng": -77.081449, "tipo": "Bebederos", "globo": "Bebedero en la Facultad de Arte y Diseño" },
-  { "title": "Bebedero - Pabellón Z (Ciencias Sociales)", "lat": -12.070763, "lng": -77.080958, "tipo": "Bebederos", "globo": "Bebedero en el Pabellón Z - Ciencias Sociales" },
-  { "title": "Bebedero - Cafetería de Ciencias", "lat": -12.072084, "lng": -77.080324, "tipo": "Bebederos", "globo": "Bebedero cerca de la cafetería de Ciencias" },
-  { "title": "Bebedero - Gimnasio", "lat": -12.067246, "lng": -77.080792, "tipo": "Bebederos", "globo": "Bebedero junto al Gimnasio" },
-  { "title": "Bebedero - Aulario / McGregor", "lat": -12.069617, "lng": -77.081409, "tipo": "Bebederos", "globo": "Bebedero en el edificio McGregor" }
+  { "id": "beb-01", "title": "Bebedero - Tinkuy / Biblioteca Central", "lat": -12.069354, "lng": -77.080451, "tipo": "Bebederos", "estado": "operativo", "ubicacion": "Ingreso a la Biblioteca Central (Tinkuy), 1er piso", "ultimoReporte": "2026-05-12", "reportes": 0 },
+  { "id": "beb-02", "title": "Bebedero - Pabellón A (Letras)", "lat": -12.068452, "lng": -77.078501, "tipo": "Bebederos", "estado": "filtro", "ubicacion": "Pabellón A, pasillo central 1er piso", "ultimoReporte": "2026-05-28", "reportes": 3 },
+  { "id": "beb-03", "title": "Bebedero - Pabellón V (Ingeniería)", "lat": -12.072108, "lng": -77.080754, "tipo": "Bebederos", "estado": "fuera_servicio", "ubicacion": "Pabellón V, frente al aula V-101", "ultimoReporte": "2026-05-30", "reportes": 7 },
+  { "id": "beb-04", "title": "Bebedero - Complejo de Innovación Académica (CIA)", "lat": -12.071439, "lng": -77.078890, "tipo": "Bebederos", "estado": "operativo", "ubicacion": "CIA, hall de ingreso", "ultimoReporte": "2026-04-20", "reportes": 0 },
+  { "id": "beb-05", "title": "Bebedero - Comedor Central", "lat": -12.067676, "lng": -77.079359, "tipo": "Bebederos", "estado": "revision", "ubicacion": "Exterior del Comedor Central", "ultimoReporte": "2026-05-29", "reportes": 2 },
+  { "id": "beb-06", "title": "Bebedero - Polideportivo", "lat": -12.066068, "lng": -77.079687, "tipo": "Bebederos", "estado": "operativo", "ubicacion": "Zona de Deportes, junto al ingreso al Polideportivo", "ultimoReporte": "2026-05-15", "reportes": 1 },
+  { "id": "beb-07", "title": "Bebedero - Rosa Náutica / Tótem", "lat": -12.069924, "lng": -77.080955, "tipo": "Bebederos", "estado": "filtro", "ubicacion": "Explanada del Tótem", "ultimoReporte": "2026-05-26", "reportes": 4 },
+  { "id": "beb-08", "title": "Bebedero - Facultad de Arte", "lat": -12.069166, "lng": -77.081449, "tipo": "Bebederos", "estado": "operativo", "ubicacion": "Facultad de Arte y Diseño, patio interior", "ultimoReporte": "2026-03-30", "reportes": 0 },
+  { "id": "beb-09", "title": "Bebedero - Pabellón Z (Ciencias Sociales)", "lat": -12.070763, "lng": -77.080958, "tipo": "Bebederos", "estado": "fuera_servicio", "ubicacion": "Pabellón Z, 2do piso", "ultimoReporte": "2026-05-31", "reportes": 5 },
+  { "id": "beb-10", "title": "Bebedero - Cafetería de Ciencias", "lat": -12.072084, "lng": -77.080324, "tipo": "Bebederos", "estado": "operativo", "ubicacion": "Exterior de la cafetería de Ciencias", "ultimoReporte": "2026-05-10", "reportes": 0 },
+  { "id": "beb-11", "title": "Bebedero - Gimnasio", "lat": -12.067246, "lng": -77.080792, "tipo": "Bebederos", "estado": "revision", "ubicacion": "Junto al Gimnasio", "ultimoReporte": "2026-05-27", "reportes": 1 },
+  { "id": "beb-12", "title": "Bebedero - Aulario / McGregor", "lat": -12.069617, "lng": -77.081409, "tipo": "Bebederos", "estado": "filtro", "ubicacion": "Edificio McGregor, hall de ascensores", "ultimoReporte": "2026-05-25", "reportes": 2 }
 ]

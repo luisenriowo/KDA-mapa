@@ -20,8 +20,20 @@ const CATEGORIAS = {
 	"Lavado de autos":                   { color: "#00838f", emoji: "🧽" },
 	"Otros":                             { color: "#9e9e9e", emoji: "📍" }
 };
+// Estados de los bebederos (mock). Definen el color del pin y el detalle del popup.
+const ESTADOS_BEBEDERO = {
+	"operativo":      { color: "#2e9e3f", label: "Operativo",          desc: "Funcionando con normalidad." },
+	"filtro":         { color: "#f5a623", label: "Filtro por cambiar", desc: "Reportado: el filtro requiere mantenimiento/cambio." },
+	"revision":       { color: "#00a3e0", label: "En revisión",        desc: "Reporte recibido, pendiente de verificación." },
+	"fuera_servicio": { color: "#d0021b", label: "Fuera de servicio",  desc: "Disfuncional: no apto para consumo por el momento." }
+};
+const ESTADO_DEFECTO = "operativo";
+
 // Categorías marcadas al iniciar
 const ACTIVAS_INICIO = new Set(["Bebederos", "Unidades"]);
+
+// URL del formulario de reportes (se le pasan los datos del bebedero por query string)
+const FORM_REPORTE = "reporte.html";
 
 const map = L.map("el-mapa", { zoomControl: true }).setView([-12.0694982, -77.079835], 17);
 // Fondo minimalista (CartoDB Positron): gris claro, sin ruido de comercios/colores.
@@ -31,15 +43,49 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
 }).addTo(map);
 
-function crearIcono(tipo) {
-	const cfg = CATEGORIAS[tipo] || CATEGORIAS["Otros"];
+function colorDePunto(p) {
+	// Los bebederos se colorean por su estado actual; el resto por su categoría.
+	if (p.tipo === "Bebederos") {
+		const est = ESTADOS_BEBEDERO[p.estado] || ESTADOS_BEBEDERO[ESTADO_DEFECTO];
+		return est.color;
+	}
+	return (CATEGORIAS[p.tipo] || CATEGORIAS["Otros"]).color;
+}
+
+function crearIcono(p) {
+	const cfg = CATEGORIAS[p.tipo] || CATEGORIAS["Otros"];
 	return L.divIcon({
 		className: "",
-		html: `<div class="pin" style="background:${cfg.color}"><span>${cfg.emoji}</span></div>`,
+		html: `<div class="pin" style="background:${colorDePunto(p)}"><span>${cfg.emoji}</span></div>`,
 		iconSize: [22, 22],
 		iconAnchor: [11, 22],
 		popupAnchor: [0, -22]
 	});
+}
+
+function escapeHtml(s) {
+	return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function construirPopup(p) {
+	if (p.tipo !== "Bebederos") {
+		return p.globo && p.globo.trim() ? p.globo : `<strong>${escapeHtml(p.title)}</strong>`;
+	}
+	const est = ESTADOS_BEBEDERO[p.estado] || ESTADOS_BEBEDERO[ESTADO_DEFECTO];
+	const nombre = p.title.replace(/^Bebedero\s*-\s*/, "");
+	const params = new URLSearchParams({ id: p.id || "", bebedero: nombre, estado: est.label });
+	return `
+		<div class="popup-beb">
+			<div class="popup-titulo">💧 ${escapeHtml(nombre)}</div>
+			<span class="estado-badge" style="background:${est.color}">${est.label}</span>
+			<p class="estado-desc">${escapeHtml(est.desc)}</p>
+			<dl class="popup-detalles">
+				<dt>Ubicación</dt><dd>${escapeHtml(p.ubicacion || "—")}</dd>
+				<dt>Último reporte</dt><dd>${escapeHtml(p.ultimoReporte || "—")}</dd>
+				<dt>Reportes</dt><dd>${p.reportes != null ? p.reportes : 0}</dd>
+			</dl>
+			<a class="btn-reporte" href="${FORM_REPORTE}?${params.toString()}" target="_blank" rel="noopener">📝 Reportar un problema</a>
+		</div>`;
 }
 
 const marcadores = [];   // { punto, marker }
@@ -47,8 +93,8 @@ const grupos = {};       // tipo -> [marker]
 
 function agregarPuntos(puntos) {
 	puntos.forEach(p => {
-		const marker = L.marker([p.lat, p.lng], { icon: crearIcono(p.tipo), title: p.title });
-		marker.bindPopup(p.globo && p.globo.trim() ? p.globo : `<strong>${p.title}</strong>`);
+		const marker = L.marker([p.lat, p.lng], { icon: crearIcono(p), title: p.title });
+		marker.bindPopup(construirPopup(p), { minWidth: p.tipo === "Bebederos" ? 240 : 200 });
 		marcadores.push({ punto: p, marker });
 		(grupos[p.tipo] = grupos[p.tipo] || []).push(marker);
 	});
@@ -143,6 +189,19 @@ function configurarBuscador() {
 	document.addEventListener("click", e => { if (!e.target.closest(".panel-head")) cerrar(); });
 }
 
+function agregarLeyenda() {
+	const ctrl = L.control({ position: "bottomright" });
+	ctrl.onAdd = function () {
+		const div = L.DomUtil.create("div", "leyenda");
+		div.innerHTML = "<strong>💧 Estado de bebederos</strong>" +
+			Object.values(ESTADOS_BEBEDERO).map(e =>
+				`<div class="ley-item"><span class="swatch" style="background:${e.color}"></span>${e.label}</div>`
+			).join("");
+		return div;
+	};
+	ctrl.addTo(map);
+}
+
 document.getElementById("toggle-todos").addEventListener("click", () => {
 	const checks = [...document.querySelectorAll("#filtros input")];
 	const algunoApagado = checks.some(c => !c.checked);
@@ -159,6 +218,7 @@ Promise.all([
 	agregarPuntos(puntos);
 	construirFiltros();
 	configurarBuscador();
+	agregarLeyenda();
 	aplicarFiltros();
 }).catch(err => {
 	alert("No se pudieron cargar los datos. Ejecuta la página desde un servidor local (no abriendo el archivo directamente).\n\n" + err);
