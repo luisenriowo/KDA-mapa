@@ -1,8 +1,11 @@
 # Mapa del campus PUCP + Bebederos
 
 Clon funcional del [mapa del campus de la PUCP](https://www.pucp.edu.pe/mapa-campus/),
-reconstruido con **Leaflet + OpenStreetMap** (sin necesidad de API key de Google) y
+reconstruido con **MapLibre GL JS + OpenFreeMap** (mapa vectorial 3D, sin API key) y
 ampliado con una nueva capa de **Bebederos** (puntos de agua) sobre el campus.
+
+Incluye **vista 3D** (edificios extruidos, cámara inclinada/rotable) con un botón para
+alternar entre 2D y 3D.
 
 ## Qué incluye
 

@@ -20,6 +20,7 @@ const CATEGORIAS = {
 	"Lavado de autos":                   { color: "#00838f", emoji: "🧽" },
 	"Otros":                             { color: "#9e9e9e", emoji: "📍" }
 };
+
 // Estados de los bebederos (mock). Definen el color del pin y el detalle del popup.
 const ESTADOS_BEBEDERO = {
 	"operativo":      { color: "#2e9e3f", label: "Operativo",          desc: "Funcionando con normalidad." },
@@ -35,13 +36,35 @@ const ACTIVAS_INICIO = new Set(["Bebederos", "Unidades"]);
 // URL del formulario de reportes (se le pasan los datos del bebedero por query string)
 const FORM_REPORTE = "reporte.html";
 
-const map = L.map("el-mapa", { zoomControl: true }).setView([-12.0694982, -77.079835], 17);
-// Fondo minimalista (CartoDB Positron): gris claro, sin ruido de comercios/colores.
-L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+// Vista 3D inicial
+const VISTA_3D = { pitch: 55, bearing: -17 };
+
+// ---- Mapa (MapLibre + OpenFreeMap, con edificios 3D) ----
+const map = new maplibregl.Map({
+	container: "el-mapa",
+	style: "https://tiles.openfreemap.org/styles/liberty",
+	center: [-77.079835, -12.0694982], // [lng, lat]
+	zoom: 16.5,
+	pitch: VISTA_3D.pitch,
+	bearing: VISTA_3D.bearing,
 	maxZoom: 20,
-	subdomains: "abcd",
-	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-}).addTo(map);
+	attributionControl: { compact: true }
+});
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+
+function crearIcono(p) {
+	const cfg = CATEGORIAS[p.tipo] || CATEGORIAS["Otros"];
+	// Contenedor externo: MapLibre le aplica su transform de posición.
+	const wrap = document.createElement("div");
+	wrap.className = "pin-wrap";
+	// Pin interno: conserva su propia rotación sin que MapLibre la pise.
+	const pin = document.createElement("div");
+	pin.className = "pin";
+	pin.style.background = colorDePunto(p);
+	pin.innerHTML = `<span>${cfg.emoji}</span>`;
+	wrap.appendChild(pin);
+	return wrap;
+}
 
 function colorDePunto(p) {
 	// Los bebederos se colorean por su estado actual; el resto por su categoría.
@@ -52,22 +75,11 @@ function colorDePunto(p) {
 	return (CATEGORIAS[p.tipo] || CATEGORIAS["Otros"]).color;
 }
 
-function crearIcono(p) {
-	const cfg = CATEGORIAS[p.tipo] || CATEGORIAS["Otros"];
-	return L.divIcon({
-		className: "",
-		html: `<div class="pin" style="background:${colorDePunto(p)}"><span>${cfg.emoji}</span></div>`,
-		iconSize: [22, 22],
-		iconAnchor: [11, 22],
-		popupAnchor: [0, -22]
-	});
-}
-
 function escapeHtml(s) {
 	return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-function construirPopup(p) {
+function construirPopupHTML(p) {
 	if (p.tipo !== "Bebederos") {
 		return p.globo && p.globo.trim() ? p.globo : `<strong>${escapeHtml(p.title)}</strong>`;
 	}
@@ -88,22 +100,23 @@ function construirPopup(p) {
 		</div>`;
 }
 
-const marcadores = [];   // { punto, marker }
-const grupos = {};       // tipo -> [marker]
+const marcadores = [];   // { punto, marker, visible }
+const grupos = {};       // tipo -> [item]
 
 function agregarPuntos(puntos) {
 	puntos.forEach(p => {
-		const marker = L.marker([p.lat, p.lng], { icon: crearIcono(p), title: p.title });
-		marker.bindPopup(construirPopup(p), { minWidth: p.tipo === "Bebederos" ? 240 : 200 });
-		marcadores.push({ punto: p, marker });
-		(grupos[p.tipo] = grupos[p.tipo] || []).push(marker);
+		const marker = new maplibregl.Marker({ element: crearIcono(p), anchor: "bottom" })
+			.setLngLat([p.lng, p.lat])
+			.setPopup(new maplibregl.Popup({ offset: 24, maxWidth: "280px" }).setHTML(construirPopupHTML(p)));
+		const item = { punto: p, marker, visible: false };
+		marcadores.push(item);
+		(grupos[p.tipo] = grupos[p.tipo] || []).push(item);
 	});
 }
 
 function construirFiltros() {
 	const cont = document.getElementById("filtros");
 	cont.innerHTML = "";
-	// Orden: primero Bebederos, luego el resto por nombre
 	const tipos = Object.keys(grupos).sort((a, b) => {
 		if (a === "Bebederos") return -1;
 		if (b === "Bebederos") return 1;
@@ -132,9 +145,9 @@ function aplicarFiltros() {
 	document.querySelectorAll("#filtros input:checked").forEach(c => activos.add(c.value));
 	for (const tipo in grupos) {
 		const mostrar = activos.has(tipo);
-		grupos[tipo].forEach(m => {
-			if (mostrar) { if (!map.hasLayer(m)) m.addTo(map); }
-			else { if (map.hasLayer(m)) map.removeLayer(m); }
+		grupos[tipo].forEach(item => {
+			if (mostrar && !item.visible) { item.marker.addTo(map); item.visible = true; }
+			else if (!mostrar && item.visible) { item.marker.remove(); item.visible = false; }
 		});
 	}
 }
@@ -150,9 +163,7 @@ function configurarBuscador() {
 	function buscar(q) {
 		q = q.trim().toLowerCase();
 		if (!q) { cerrar(); return; }
-		const res = marcadores
-			.filter(m => m.punto.title.toLowerCase().includes(q))
-			.slice(0, 12);
+		const res = marcadores.filter(m => m.punto.title.toLowerCase().includes(q)).slice(0, 12);
 		if (!res.length) { cerrar(); return; }
 		lista.innerHTML = "";
 		res.forEach(m => {
@@ -166,12 +177,11 @@ function configurarBuscador() {
 	}
 
 	function seleccionar(m) {
-		// Asegura que su categoría esté visible
 		const chk = document.querySelector(`#filtros input[value="${m.punto.tipo}"]`);
 		if (chk && !chk.checked) { chk.checked = true; aplicarFiltros(); }
-		if (!map.hasLayer(m.marker)) m.marker.addTo(map);
-		map.setView([m.punto.lat, m.punto.lng], 19);
-		m.marker.openPopup();
+		if (!m.visible) { m.marker.addTo(map); m.visible = true; }
+		map.flyTo({ center: [m.punto.lng, m.punto.lat], zoom: 18.5, pitch: VISTA_3D.pitch });
+		m.marker.togglePopup();
 		input.value = m.punto.title;
 		cerrar();
 	}
@@ -189,17 +199,30 @@ function configurarBuscador() {
 	document.addEventListener("click", e => { if (!e.target.closest(".panel-head")) cerrar(); });
 }
 
+// ---- Leyenda de estados + toggle 2D/3D ----
 function agregarLeyenda() {
-	const ctrl = L.control({ position: "bottomright" });
-	ctrl.onAdd = function () {
-		const div = L.DomUtil.create("div", "leyenda");
-		div.innerHTML = "<strong>💧 Estado de bebederos</strong>" +
-			Object.values(ESTADOS_BEBEDERO).map(e =>
-				`<div class="ley-item"><span class="swatch" style="background:${e.color}"></span>${e.label}</div>`
-			).join("");
-		return div;
-	};
-	ctrl.addTo(map);
+	const div = document.createElement("div");
+	div.className = "leyenda";
+	div.innerHTML = "<strong>💧 Estado de bebederos</strong>" +
+		Object.values(ESTADOS_BEBEDERO).map(e =>
+			`<div class="ley-item"><span class="swatch" style="background:${e.color}"></span>${e.label}</div>`
+		).join("");
+	document.querySelector(".caja-mapa").appendChild(div);
+}
+
+function configurarToggle3D() {
+	const btn = document.getElementById("toggle-3d");
+	let en3D = true;
+	btn.addEventListener("click", () => {
+		en3D = !en3D;
+		if (en3D) {
+			map.easeTo({ pitch: VISTA_3D.pitch, bearing: VISTA_3D.bearing, duration: 600 });
+			btn.textContent = "Vista 2D";
+		} else {
+			map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+			btn.textContent = "Vista 3D";
+		}
+	});
 }
 
 document.getElementById("toggle-todos").addEventListener("click", () => {
@@ -209,18 +232,21 @@ document.getElementById("toggle-todos").addEventListener("click", () => {
 	aplicarFiltros();
 });
 
-// ---- Carga de datos ----
-Promise.all([
-	fetch("data/puntos.json").then(r => r.json()),
-	fetch("data/bebederos.json").then(r => r.json())
-]).then(([puntos, bebederos]) => {
-	agregarPuntos(bebederos);   // bebederos primero para que queden encima
-	agregarPuntos(puntos);
-	construirFiltros();
-	configurarBuscador();
-	agregarLeyenda();
-	aplicarFiltros();
-}).catch(err => {
-	alert("No se pudieron cargar los datos. Ejecuta la página desde un servidor local (no abriendo el archivo directamente).\n\n" + err);
-	console.error(err);
+// ---- Carga de datos (tras cargar el estilo del mapa) ----
+map.on("load", () => {
+	configurarToggle3D();
+	Promise.all([
+		fetch("data/puntos.json").then(r => r.json()),
+		fetch("data/bebederos.json").then(r => r.json())
+	]).then(([puntos, bebederos]) => {
+		agregarPuntos(bebederos);
+		agregarPuntos(puntos);
+		construirFiltros();
+		configurarBuscador();
+		agregarLeyenda();
+		aplicarFiltros();
+	}).catch(err => {
+		alert("No se pudieron cargar los datos. Ejecuta la página desde un servidor local.\n\n" + err);
+		console.error(err);
+	});
 });
