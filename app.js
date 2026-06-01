@@ -42,7 +42,7 @@ const VISTA_3D = { pitch: 55, bearing: -17 };
 // ---- Mapa (MapLibre + OpenFreeMap, con edificios 3D) ----
 const map = new maplibregl.Map({
 	container: "el-mapa",
-	style: "https://tiles.openfreemap.org/styles/liberty",
+	style: "https://tiles.openfreemap.org/styles/positron", // estilo minimalista (gris claro, poco ruido)
 	center: [-77.079835, -12.0694982], // [lng, lat]
 	zoom: 16.5,
 	pitch: VISTA_3D.pitch,
@@ -233,7 +233,29 @@ document.getElementById("toggle-todos").addEventListener("click", () => {
 });
 
 // ---- Carga de datos (tras cargar el estilo del mapa) ----
+// Añade edificios 3D extruidos sobre un estilo plano (positron no los trae de fábrica).
+function agregarEdificios3D() {
+	if (map.getLayer("building-3d")) return;
+	const layers = map.getStyle().layers;
+	const primerSimbolo = layers.find(l => l.type === "symbol"); // insertar bajo las etiquetas
+	if (map.getLayer("building")) map.setLayoutProperty("building", "visibility", "none");
+	map.addLayer({
+		id: "building-3d",
+		type: "fill-extrusion",
+		source: "openmaptiles",
+		"source-layer": "building",
+		minzoom: 14,
+		paint: {
+			"fill-extrusion-base": ["get", "render_min_height"],
+			"fill-extrusion-color": "#e2e4e8",
+			"fill-extrusion-height": ["get", "render_height"],
+			"fill-extrusion-opacity": 0.92
+		}
+	}, primerSimbolo ? primerSimbolo.id : undefined);
+}
+
 map.on("load", () => {
+	agregarEdificios3D();
 	configurarToggle3D();
 	Promise.all([
 		fetch("data/puntos.json").then(r => r.json()),

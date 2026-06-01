@@ -4,7 +4,8 @@ Clon funcional del [mapa del campus de la PUCP](https://www.pucp.edu.pe/mapa-cam
 reconstruido con **MapLibre GL JS + OpenFreeMap** (mapa vectorial 3D, sin API key) y
 ampliado con una nueva capa de **Bebederos** (puntos de agua) sobre el campus.
 
-Incluye **vista 3D** (edificios extruidos, cámara inclinada/rotable) con un botón para
+Usa el estilo minimalista **positron** (gris claro, poco ruido) y le añade una capa
+propia de **edificios 3D** extruidos. Incluye cámara inclinada/rotable y un botón para
 alternar entre 2D y 3D.
 
 ## Qué incluye
